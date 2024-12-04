@@ -30,6 +30,11 @@ def inserir_simbolo(simbolo):
 
 def verificar_string(pais, pais_dict, string):
     passos = []
+    alfabeto = set()
+    
+    for pai in pais:
+        for filho in pai.filhos:
+            alfabeto.add(filho.entrada)
     
     atual = next((pai for pai in pais if pai.start), None)
     if not atual:
@@ -37,19 +42,32 @@ def verificar_string(pais, pais_dict, string):
         return False, "\n".join(passos)
     
     for i, letra in enumerate(string):
+        if (letra not in alfabeto):
+            passos.append(f"Erro: A letra '{letra}' não está no alfabeto.")
+            return False, "\n".join(passos)
+        
         passos.append(f"Verificando letra '{letra}' no nó {atual.simbolo}")
 
         filho = atual.buscar_filho(letra)
         
-        if not filho:
+        if not filho and not atual.final:
             passos.append(f"Não encontrou a letra '{letra}' no simbolo {atual.simbolo}. A string é inválida.")
             return False, "\n".join(passos)
 
-        atual = pais_dict.get(filho.direcionamento)
+        if filho:
+            atual = pais_dict.get(filho.direcionamento)
+            
         if not atual:
             passos.append(f"Erro: Não encontrou o nó de direcionamento '{filho.direcionamento}'")
             return False, "\n".join(passos)
-
+        
+        if filho is None and atual.final and i == len(string) - 1:
+            passos.append(f"String válida. Chegou ao final no nó {atual.simbolo}.")
+            return True, "\n".join(passos)
+        elif filho is None and atual.final:
+            passos.append(f"Não encontrou a letra '{letra}' no simbolo {atual.simbolo}. A string é inválida.")
+            return False, "\n".join(passos)
+        
         if i == len(string) - 1 and atual.final:
             passos.append(f"String válida. Chegou ao final no nó {atual.simbolo}.")
             return True, "\n".join(passos)
@@ -95,6 +113,8 @@ def enviar_texto():
                     elif simbolo:
                         entrada = simbolo[0]
                         direcionamento = simbolo[1:]
+                        if (direcionamento == ""):
+                            erros.append(f"linha {linhaAtual} - Símbolo de direcionamento não encontrado")
                         filho = Filho(entrada, direcionamento)
                         pai.adicionar_filho(filho)
                 
